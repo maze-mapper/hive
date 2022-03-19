@@ -1,11 +1,11 @@
-package hexgrid
+package hive
 
 import (
 	"reflect"
 	"testing"
 )
 
-func hexSliceIsEqual(a, b []Hex) bool {
+func HexSliceIsEqual(a, b []Hex) bool {
 	am := make(map[Hex]struct{})
 	for _, v := range a {
 		am[v] = struct{}{}
@@ -52,54 +52,8 @@ func TestGetAdjacent(t *testing.T) {
 	}
 	t.Run("adjacent", func(t *testing.T) {
 		got := input.GetAdjacent()
-		if !hexSliceIsEqual(got, want) {
+		if !HexSliceIsEqual(got, want) {
 			t.Errorf("Got %v, want %v", got, want)
 		}
 	})
-}
-
-func TestBFS(t *testing.T) {
-	blocked := map[Hex]struct{}{
-		Hex{1, -1, 0}:  struct{}{},
-		Hex{2, -1, -1}: struct{}{},
-		Hex{2, 0, -2}:  struct{}{},
-		Hex{2, 1, -3}:  struct{}{},
-		Hex{1, 2, -3}:  struct{}{},
-		Hex{1, -1, 0}:  struct{}{},
-		Hex{0, 2, -2}:  struct{}{},
-		Hex{-1, 2, -1}: struct{}{},
-		Hex{-1, 1, 0}:  struct{}{},
-		Hex{-2, 1, 1}:  struct{}{},
-		Hex{-3, 2, 1}:  struct{}{},
-		Hex{-1, -1, 2}: struct{}{},
-		Hex{0, -2, 2}:  struct{}{},
-		Hex{1, -3, 2}:  struct{}{},
-	}
-	available := func(h Hex) bool {
-		_, ok := blocked[h]
-		return !ok
-	}
-
-	tests := map[string]struct {
-		steps int
-		want  []Hex
-	}{
-		"BFS 1": {steps: 1, want: []Hex{
-			Hex{0, -1, 1}, Hex{-1, 0, 1}, Hex{1, 0, -1}, Hex{0, 1, -1},
-		}},
-		"BFS 2": {steps: 2, want: []Hex{
-			Hex{1, -2, 1}, Hex{-2, 0, 2}, Hex{1, 1, -2},
-		}},
-		"BFS 3": {steps: 3, want: []Hex{
-			Hex{2, -3, 1}, Hex{2, -2, 0}, Hex{-3, 1, 2}, Hex{-3, 0, 3}, Hex{-2, -1, 3},
-		}},
-	}
-	for name, tc := range tests {
-		t.Run(name, func(t *testing.T) {
-			got := BFS(Hex{0, 0, 0}, tc.steps, available)
-			if !hexSliceIsEqual(got, tc.want) {
-				t.Errorf("Got %v, want %v", got, tc.want)
-			}
-		})
-	}
 }
