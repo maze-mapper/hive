@@ -1,5 +1,10 @@
 package hive
 
+import (
+	"log"
+	"sync"
+)
+
 // Piece enums
 const (
 	QueenBee = iota
@@ -24,6 +29,19 @@ type Piece struct {
 // Game holds information on the game state
 type Game struct {
 	positions map[Hex]Piece // Positions occupied by a piece
+}
+
+// Copy returns a deep copy of a Game
+func (g *Game) Copy() Game {
+	positions := map[Hex]Piece{}
+	for h, piece := range g.positions {
+		positions[h] = Piece{
+			creature: piece.creature,
+			colour:   piece.colour,
+		}
+	}
+	gg := Game{positions: positions}
+	return gg
 }
 
 // checkSpaceOccupied returns true if a space is occupied by a piece
@@ -106,11 +124,37 @@ func BFS(start Hex, g *Game, neighbourFunc func(Hex) []Hex, maxDepth int) [][]He
 	return nodesByDepth
 }
 
+// GetAllAvailableMoves returns a map of hexes to all possible moves for a given player colour
+func GetAllAvailableMoves(g Game, colour int) map[Hex][]Hex {
+	moves := map[Hex][]Hex{}
+	var mu sync.Mutex
+	var wg sync.WaitGroup
+
+	for h, piece := range g.positions {
+		if piece.colour == colour {
+			hh := h
+			wg.Add(1)
+			go func() {
+				m := GetAvailableMoves(hh, g.Copy())
+				if len(m) > 0 {
+					mu.Lock()
+					moves[hh] = m
+					mu.Unlock()
+				}
+				wg.Done()
+			}()
+		}
+	}
+	wg.Wait()
+
+	return moves
+}
+
 // GetAvailableMoves returns the available moves for a piece
 func GetAvailableMoves(h Hex, g Game) []Hex {
 	piece, ok := g.positions[h]
 	if !ok {
-		panic("No piece at coordinate")
+		log.Fatalf("No piece at coordinate %v", h)
 	}
 
 	var moves []Hex

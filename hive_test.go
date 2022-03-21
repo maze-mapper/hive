@@ -60,9 +60,15 @@ var (
 			NewHex(2, 0, -2):  Piece{creature: Grasshopper, colour: Black},
 		},
 	}
-	game3Moves []Hex = []Hex{
-		NewHex(-1, 0, 1), NewHex(-1, 1, 0), NewHex(0, 1, -1), NewHex(1, 0, -1),
+	game3BlackMoves map[Hex][]Hex = map[Hex][]Hex{
+		NewHex(2, 0, -2): []Hex{NewHex(0, 2, -2)},
 	}
+	game3WhiteMoves map[Hex][]Hex = map[Hex][]Hex{
+		NewHex(0, 0, 0):   []Hex{NewHex(-1, 0, 1), NewHex(-1, 1, 0), NewHex(0, 1, -1), NewHex(1, 0, -1)},
+		NewHex(-1, 1, 0):  []Hex{NewHex(1, -1, 0), NewHex(-1, 3, -2)},
+		NewHex(-1, 2, -1): []Hex{NewHex(-2, 2, 0), NewHex(0, 2, -2)},
+	}
+	game3Moves []Hex = game3WhiteMoves[NewHex(0, 0, 0)]
 
 	// Grasshopper move example
 	//     __
@@ -122,9 +128,13 @@ var (
 			NewHex(-1, 2, -1): Piece{creature: Beetle, colour: White},
 		},
 	}
-	game5Moves []Hex = []Hex{
-		NewHex(3, -1, -2), NewHex(-2, 2, 0), NewHex(0, 3, -3), NewHex(1, 2, -3),
+	game5BlackMoves map[Hex][]Hex = map[Hex][]Hex{
+		NewHex(0, 0, 0): []Hex{NewHex(3, -1, -2), NewHex(-2, 2, 0), NewHex(0, 3, -3), NewHex(1, 2, -3)},
 	}
+	game5WhiteMoves map[Hex][]Hex = map[Hex][]Hex{
+		NewHex(-1, 2, -1): []Hex{NewHex(-2, 3, -1), NewHex(-1, 3, -2), NewHex(0, 2, -2)},
+	}
+	game5Moves []Hex = game5BlackMoves[NewHex(0, 0, 0)]
 
 	// Soldier Ant move example
 	//  __    __
@@ -144,10 +154,17 @@ var (
 			NewHex(-2, -1, 3): Piece{creature: QueenBee, colour: Black},
 		},
 	}
-	game6Moves []Hex = []Hex{
-		NewHex(-1, 1, 0), NewHex(-2, 1, 1), NewHex(-3, 1, 2), NewHex(-3, 0, 3), NewHex(-3, -1, 4), NewHex(-2, -2, 4),
-		NewHex(-1, -2, 3), NewHex(0, -3, 3), NewHex(1, -3, 2), NewHex(1, -2, 1), NewHex(1, -1, 0),
+	game6BlackMoves map[Hex][]Hex = map[Hex][]Hex{
+		NewHex(0, 0, 0): []Hex{
+			NewHex(-1, 1, 0), NewHex(-2, 1, 1), NewHex(-3, 1, 2), NewHex(-3, 0, 3), NewHex(-3, -1, 4), NewHex(-2, -2, 4),
+			NewHex(-1, -2, 3), NewHex(0, -3, 3), NewHex(1, -3, 2), NewHex(1, -2, 1), NewHex(1, -1, 0),
+		},
+		NewHex(-2, -1, 3): []Hex{NewHex(-3, 0, 3), NewHex(-1, -1, 2)},
 	}
+	game6WhiteMoves map[Hex][]Hex = map[Hex][]Hex{
+		NewHex(0, -2, 2): []Hex{NewHex(-1, -1, 2), NewHex(1, -2, 1)},
+	}
+	game6Moves []Hex = game6BlackMoves[NewHex(0, 0, 0)]
 
 	// One hive example 1
 	//  __
@@ -185,6 +202,11 @@ var (
 			NewHex(1, 1, -2):  Piece{creature: Beetle, colour: Black},
 		},
 	}
+	game8BlackMoves map[Hex][]Hex = map[Hex][]Hex{
+		NewHex(-1, 1, 0): []Hex{NewHex(2, -2, 0)},
+		NewHex(1, 1, -2): []Hex{NewHex(1, 0, -1), NewHex(2, 0, -2), NewHex(2, 1, -3)},
+	}
+	game8WhiteMoves map[Hex][]Hex = map[Hex][]Hex{}
 
 	// Trapped spider gets correct moves
 	//      __
@@ -225,6 +247,47 @@ func TestGetAvailableMoves(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			got := GetAvailableMoves(NewHex(0, 0, 0), tc.g)
 			if !HexSliceIsEqual(got, tc.want) {
+				t.Errorf("Got %v, want %v", got, tc.want)
+			}
+		})
+	}
+}
+
+func hexDictsAreEqual(a map[Hex][]Hex, b map[Hex][]Hex) bool {
+	if len(a) != len(b) {
+		return false
+	}
+	for k, av := range a {
+		if bv, ok := b[k]; ok {
+			if !HexSliceIsEqual(av, bv) {
+				return false
+			}
+		} else {
+			return false
+		}
+	}
+	return true
+}
+
+func TestGetAllAvailableMoves(t *testing.T) {
+	tests := map[string]struct {
+		g      Game
+		colour int
+		want   map[Hex][]Hex
+	}{
+		"Game 3 black moves": {g: game3, colour: Black, want: game3BlackMoves},
+		"Game 3 white moves": {g: game3, colour: White, want: game3WhiteMoves},
+		"Game 5 black moves": {g: game5, colour: Black, want: game5BlackMoves},
+		"Game 5 white moves": {g: game5, colour: White, want: game5WhiteMoves},
+		"Game 6 black moves": {g: game6, colour: Black, want: game6BlackMoves},
+		"Game 6 white moves": {g: game6, colour: White, want: game6WhiteMoves},
+		"Game 8 black moves": {g: game8, colour: Black, want: game8BlackMoves},
+		"Game 8 white moves": {g: game8, colour: White, want: game8WhiteMoves},
+	}
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+			got := GetAllAvailableMoves(tc.g, tc.colour)
+			if !hexDictsAreEqual(got, tc.want) {
 				t.Errorf("Got %v, want %v", got, tc.want)
 			}
 		})
