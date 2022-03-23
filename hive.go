@@ -18,6 +18,7 @@ const (
 const (
 	Black = iota
 	White
+	MaxPlayers
 )
 
 // Piece represents a creature tile
