@@ -6,8 +6,9 @@ import (
 
 // testCaseGame holds information for a test case game including available moves
 type testCaseGame struct {
-	game  Game
-	moves map[int]map[Hex][]Hex
+	game       Game
+	moves      map[int]map[Hex][]Hex
+	placements map[int][]Hex
 }
 
 // zeroPosMoves returns the slice of possible moves for the piece located at the origin
@@ -102,6 +103,14 @@ var sampleGames map[string]testCaseGame = map[string]testCaseGame{
 				NewHex(0, 0, 0):   []Hex{NewHex(-1, 0, 1), NewHex(-1, 1, 0), NewHex(0, 1, -1), NewHex(1, 0, -1)},
 				NewHex(-1, 1, 0):  []Hex{NewHex(1, -1, 0), NewHex(-1, 3, -2)},
 				NewHex(-1, 2, -1): []Hex{NewHex(-2, 2, 0), NewHex(0, 2, -2)},
+			},
+		},
+		placements: map[int][]Hex{
+			Black: []Hex{
+				NewHex(1, 2, -3), NewHex(2, 1, -3), NewHex(3, 0, -3), NewHex(3, -1, -2), NewHex(2, -1, -1),
+			},
+			White: []Hex{
+				NewHex(1, -1, 0), NewHex(0, -1, 1), NewHex(-1, 0, 1), NewHex(-2, 1, 1), NewHex(-2, 2, 0), NewHex(-2, 3, -1), NewHex(-1, 3, -2),
 			},
 		},
 	},
@@ -326,6 +335,11 @@ func hexDictsAreEqual(a map[Hex][]Hex, b map[Hex][]Hex) bool {
 	return true
 }
 
+var colourNames map[int]string = map[int]string{
+	Black: "black",
+	White: "white",
+}
+
 func TestGetAllAvailableMoves(t *testing.T) {
 	tests := map[string]testCaseGame{
 		"Game 3 moves ": sampleGames["Game 3"],
@@ -333,16 +347,29 @@ func TestGetAllAvailableMoves(t *testing.T) {
 		"Game 6 moves ": sampleGames["Game 6"],
 		"Game 8 moves ": sampleGames["Game 8"],
 	}
-	colourNames := map[int]string{
-		Black: "black",
-		White: "white",
-	}
 	for name, tc := range tests {
 		for player := 0; player < MaxPlayers; player++ {
 			t.Run(name+colourNames[player], func(t *testing.T) {
 				got := GetAllAvailableMoves(tc.game, player)
 				want := tc.moves[player]
 				if !hexDictsAreEqual(got, want) {
+					t.Errorf("Got %v, want %v", got, want)
+				}
+			})
+		}
+	}
+}
+
+func TestGetPlacements(t *testing.T) {
+	tests := map[string]testCaseGame{
+		"Game 3 moves ": sampleGames["Game 3"],
+	}
+	for name, tc := range tests {
+		for player := 0; player < MaxPlayers; player++ {
+			t.Run(name+colourNames[player], func(t *testing.T) {
+				got := GetPlacements(tc.game, player)
+				want := tc.placements[player]
+				if !HexSliceIsEqual(got, want) {
 					t.Errorf("Got %v, want %v", got, want)
 				}
 			})

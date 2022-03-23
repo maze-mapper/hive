@@ -297,3 +297,32 @@ func getAllAvailableBFSMoves(h Hex, g Game) []Hex {
 	}
 	return moves
 }
+
+// GetPlacements returns all hexes where a particular colour piece could be placed
+func GetPlacements(g Game, colour int) []Hex {
+	allPlacements := map[Hex]map[int]struct{}{}
+	for h, piece := range g.positions {
+		neighbours := h.GetAdjacent()
+		for _, neighbour := range neighbours {
+			// Skip hexes that already contain a piece
+			if _, ok := g.positions[neighbour]; ok {
+				continue
+			}
+			// Initialise map
+			if _, ok := allPlacements[neighbour]; !ok {
+				allPlacements[neighbour] = map[int]struct{}{}
+			}
+			// Mark what colour pieces this space touches
+			allPlacements[neighbour][piece.colour] = struct{}{}
+		}
+	}
+
+	placements := []Hex{}
+	for k, v := range allPlacements {
+		// Add to placements if the only touching colour is the player colour
+		if _, ok := v[colour]; len(v) == 1 && ok {
+			placements = append(placements, k)
+		}
+	}
+	return placements
+}
