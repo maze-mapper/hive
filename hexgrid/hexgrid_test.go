@@ -1,11 +1,11 @@
-package hive
+package hexgrid
 
 import (
 	"reflect"
 	"testing"
 )
 
-func HexSliceIsEqual(a, b []Hex) bool {
+func hexSlicesAreEqual(a, b []Hex) bool {
 	am := make(map[Hex]struct{})
 	for _, v := range a {
 		am[v] = struct{}{}
@@ -52,7 +52,7 @@ func TestGetAdjacent(t *testing.T) {
 	}
 	t.Run("adjacent", func(t *testing.T) {
 		got := input.GetAdjacent()
-		if !HexSliceIsEqual(got, want) {
+		if !hexSlicesAreEqual(got, want) {
 			t.Errorf("Got %v, want %v", got, want)
 		}
 	})

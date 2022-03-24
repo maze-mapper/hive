@@ -1,26 +1,29 @@
 package hive
 
 import (
+	"reflect"
 	"testing"
+
+	"github.com/maze-mapper/hive/hexgrid"
 )
 
 // testCaseGame holds information for a test case game including available moves
 type testCaseGame struct {
 	game       Game
-	moves      map[int]map[Hex][]Hex
-	placements map[int][]Hex
+	moves      map[int]map[hexgrid.Hex][]hexgrid.Hex
+	placements map[int][]hexgrid.Hex
 }
 
 // zeroPosMoves returns the slice of possible moves for the piece located at the origin
-func (tc *testCaseGame) zeroPosMoves() []Hex {
-	zeroPos := NewHex(0, 0, 0)
+func (tc *testCaseGame) zeroPosMoves() []hexgrid.Hex {
+	zeroPos := hexgrid.New(0, 0, 0)
 	if moves, ok := tc.moves[Black][zeroPos]; ok {
 		return moves
 	}
 	if moves, ok := tc.moves[White][zeroPos]; ok {
 		return moves
 	}
-	return []Hex{}
+	return []hexgrid.Hex{}
 }
 
 // Sample games for testing
@@ -33,18 +36,18 @@ var sampleGames map[string]testCaseGame = map[string]testCaseGame{
 	//  \__/
 	"Game 1": {
 		game: Game{
-			positions: map[Hex]Piece{
-				NewHex(0, 0, 0):  Piece{creature: QueenBee},
-				NewHex(-1, 1, 0): Piece{creature: Beetle},
-				NewHex(-1, 0, 1): Piece{creature: Beetle},
-				NewHex(0, -1, 1): Piece{creature: Beetle},
-				NewHex(1, -1, 0): Piece{creature: Beetle},
+			positions: map[hexgrid.Hex]Piece{
+				hexgrid.New(0, 0, 0):  Piece{creature: QueenBee},
+				hexgrid.New(-1, 1, 0): Piece{creature: Beetle},
+				hexgrid.New(-1, 0, 1): Piece{creature: Beetle},
+				hexgrid.New(0, -1, 1): Piece{creature: Beetle},
+				hexgrid.New(1, -1, 0): Piece{creature: Beetle},
 			},
 		},
 		// Only use this sample for testing central queen bee, moves are incomplete
-		moves: map[int]map[Hex][]Hex{
-			Black: map[Hex][]Hex{
-				NewHex(0, 0, 0): []Hex{NewHex(1, 0, -1), NewHex(0, 1, -1)},
+		moves: map[int]map[hexgrid.Hex][]hexgrid.Hex{
+			Black: map[hexgrid.Hex][]hexgrid.Hex{
+				hexgrid.New(0, 0, 0): []hexgrid.Hex{hexgrid.New(1, 0, -1), hexgrid.New(0, 1, -1)},
 			},
 		},
 	},
@@ -58,20 +61,20 @@ var sampleGames map[string]testCaseGame = map[string]testCaseGame{
 	//  \__/  \__/
 	"Game 2": {
 		game: Game{
-			positions: map[Hex]Piece{
-				NewHex(0, 0, 0):  Piece{creature: Beetle},
-				NewHex(-1, 1, 0): Piece{creature: Beetle},
-				NewHex(-1, 0, 1): Piece{creature: Beetle},
-				NewHex(0, -1, 1): Piece{creature: Beetle},
-				NewHex(1, -1, 0): Piece{creature: Beetle},
-				NewHex(1, 0, -1): Piece{creature: Beetle},
+			positions: map[hexgrid.Hex]Piece{
+				hexgrid.New(0, 0, 0):  Piece{creature: Beetle},
+				hexgrid.New(-1, 1, 0): Piece{creature: Beetle},
+				hexgrid.New(-1, 0, 1): Piece{creature: Beetle},
+				hexgrid.New(0, -1, 1): Piece{creature: Beetle},
+				hexgrid.New(1, -1, 0): Piece{creature: Beetle},
+				hexgrid.New(1, 0, -1): Piece{creature: Beetle},
 			},
 		},
 		// Only use this sample for testing central beetle, moves are incomplete
-		moves: map[int]map[Hex][]Hex{
-			Black: map[Hex][]Hex{
-				NewHex(0, 0, 0): []Hex{
-					NewHex(-1, 1, 0), NewHex(-1, 0, 1), NewHex(0, -1, 1), NewHex(1, -1, 0), NewHex(1, 0, -1),
+		moves: map[int]map[hexgrid.Hex][]hexgrid.Hex{
+			Black: map[hexgrid.Hex][]hexgrid.Hex{
+				hexgrid.New(0, 0, 0): []hexgrid.Hex{
+					hexgrid.New(-1, 1, 0), hexgrid.New(-1, 0, 1), hexgrid.New(0, -1, 1), hexgrid.New(1, -1, 0), hexgrid.New(1, 0, -1),
 				},
 			},
 		},
@@ -86,31 +89,31 @@ var sampleGames map[string]testCaseGame = map[string]testCaseGame{
 	// \__/  \__/
 	"Game 3": {
 		game: Game{
-			positions: map[Hex]Piece{
-				NewHex(0, 0, 0):   Piece{creature: Beetle, colour: White},
-				NewHex(-1, 1, 0):  Piece{creature: Spider, colour: White},
-				NewHex(0, 1, -1):  Piece{creature: SoldierAnt, colour: White},
-				NewHex(-1, 2, -1): Piece{creature: QueenBee, colour: White},
-				NewHex(1, 1, -2):  Piece{creature: QueenBee, colour: Black},
-				NewHex(2, 0, -2):  Piece{creature: Grasshopper, colour: Black},
+			positions: map[hexgrid.Hex]Piece{
+				hexgrid.New(0, 0, 0):   Piece{creature: Beetle, colour: White},
+				hexgrid.New(-1, 1, 0):  Piece{creature: Spider, colour: White},
+				hexgrid.New(0, 1, -1):  Piece{creature: SoldierAnt, colour: White},
+				hexgrid.New(-1, 2, -1): Piece{creature: QueenBee, colour: White},
+				hexgrid.New(1, 1, -2):  Piece{creature: QueenBee, colour: Black},
+				hexgrid.New(2, 0, -2):  Piece{creature: Grasshopper, colour: Black},
 			},
 		},
-		moves: map[int]map[Hex][]Hex{
-			Black: map[Hex][]Hex{
-				NewHex(2, 0, -2): []Hex{NewHex(0, 2, -2)},
+		moves: map[int]map[hexgrid.Hex][]hexgrid.Hex{
+			Black: map[hexgrid.Hex][]hexgrid.Hex{
+				hexgrid.New(2, 0, -2): []hexgrid.Hex{hexgrid.New(0, 2, -2)},
 			},
-			White: map[Hex][]Hex{
-				NewHex(0, 0, 0):   []Hex{NewHex(-1, 0, 1), NewHex(-1, 1, 0), NewHex(0, 1, -1), NewHex(1, 0, -1)},
-				NewHex(-1, 1, 0):  []Hex{NewHex(1, -1, 0), NewHex(-1, 3, -2)},
-				NewHex(-1, 2, -1): []Hex{NewHex(-2, 2, 0), NewHex(0, 2, -2)},
+			White: map[hexgrid.Hex][]hexgrid.Hex{
+				hexgrid.New(0, 0, 0):   []hexgrid.Hex{hexgrid.New(-1, 0, 1), hexgrid.New(-1, 1, 0), hexgrid.New(0, 1, -1), hexgrid.New(1, 0, -1)},
+				hexgrid.New(-1, 1, 0):  []hexgrid.Hex{hexgrid.New(1, -1, 0), hexgrid.New(-1, 3, -2)},
+				hexgrid.New(-1, 2, -1): []hexgrid.Hex{hexgrid.New(-2, 2, 0), hexgrid.New(0, 2, -2)},
 			},
 		},
-		placements: map[int][]Hex{
-			Black: []Hex{
-				NewHex(1, 2, -3), NewHex(2, 1, -3), NewHex(3, 0, -3), NewHex(3, -1, -2), NewHex(2, -1, -1),
+		placements: map[int][]hexgrid.Hex{
+			Black: []hexgrid.Hex{
+				hexgrid.New(1, 2, -3), hexgrid.New(2, 1, -3), hexgrid.New(3, 0, -3), hexgrid.New(3, -1, -2), hexgrid.New(2, -1, -1),
 			},
-			White: []Hex{
-				NewHex(1, -1, 0), NewHex(0, -1, 1), NewHex(-1, 0, 1), NewHex(-2, 1, 1), NewHex(-2, 2, 0), NewHex(-2, 3, -1), NewHex(-1, 3, -2),
+			White: []hexgrid.Hex{
+				hexgrid.New(1, -1, 0), hexgrid.New(0, -1, 1), hexgrid.New(-1, 0, 1), hexgrid.New(-2, 1, 1), hexgrid.New(-2, 2, 0), hexgrid.New(-2, 3, -1), hexgrid.New(-1, 3, -2),
 			},
 		},
 	},
@@ -129,26 +132,26 @@ var sampleGames map[string]testCaseGame = map[string]testCaseGame{
 	//          \__/
 	"Game 4": {
 		game: Game{
-			positions: map[Hex]Piece{
-				NewHex(0, 0, 0):   Piece{creature: Grasshopper, colour: White},
-				NewHex(0, -1, 1):  Piece{creature: QueenBee, colour: Black},
-				NewHex(1, -2, 1):  Piece{creature: SoldierAnt, colour: Black},
-				NewHex(2, -2, 0):  Piece{creature: SoldierAnt, colour: White},
-				NewHex(2, -1, -1): Piece{creature: Spider, colour: White},
-				NewHex(1, 0, -1):  Piece{creature: Grasshopper, colour: Black},
-				NewHex(0, 1, -1):  Piece{creature: Beetle, colour: White},
-				NewHex(2, 0, -2):  Piece{creature: QueenBee, colour: White},
-				NewHex(3, -1, -2): Piece{creature: Beetle, colour: Black},
-				NewHex(4, -1, -3): Piece{creature: Spider, colour: Black},
-				NewHex(4, 0, -4):  Piece{creature: Spider, colour: White},
-				NewHex(3, 1, -4):  Piece{creature: Spider, colour: Black},
+			positions: map[hexgrid.Hex]Piece{
+				hexgrid.New(0, 0, 0):   Piece{creature: Grasshopper, colour: White},
+				hexgrid.New(0, -1, 1):  Piece{creature: QueenBee, colour: Black},
+				hexgrid.New(1, -2, 1):  Piece{creature: SoldierAnt, colour: Black},
+				hexgrid.New(2, -2, 0):  Piece{creature: SoldierAnt, colour: White},
+				hexgrid.New(2, -1, -1): Piece{creature: Spider, colour: White},
+				hexgrid.New(1, 0, -1):  Piece{creature: Grasshopper, colour: Black},
+				hexgrid.New(0, 1, -1):  Piece{creature: Beetle, colour: White},
+				hexgrid.New(2, 0, -2):  Piece{creature: QueenBee, colour: White},
+				hexgrid.New(3, -1, -2): Piece{creature: Beetle, colour: Black},
+				hexgrid.New(4, -1, -3): Piece{creature: Spider, colour: Black},
+				hexgrid.New(4, 0, -4):  Piece{creature: Spider, colour: White},
+				hexgrid.New(3, 1, -4):  Piece{creature: Spider, colour: Black},
 			},
 		},
 		// Incomplete move options
-		moves: map[int]map[Hex][]Hex{
-			White: map[Hex][]Hex{
-				NewHex(0, 0, 0): []Hex{
-					NewHex(0, -2, 2), NewHex(0, 2, -2), NewHex(3, 0, -3),
+		moves: map[int]map[hexgrid.Hex][]hexgrid.Hex{
+			White: map[hexgrid.Hex][]hexgrid.Hex{
+				hexgrid.New(0, 0, 0): []hexgrid.Hex{
+					hexgrid.New(0, -2, 2), hexgrid.New(0, 2, -2), hexgrid.New(3, 0, -3),
 				},
 			},
 		},
@@ -168,25 +171,25 @@ var sampleGames map[string]testCaseGame = map[string]testCaseGame{
 	//    \__/
 	"Game 5": {
 		game: Game{
-			positions: map[Hex]Piece{
-				NewHex(0, 0, 0):   Piece{creature: Spider, colour: Black},
-				NewHex(1, 0, -1):  Piece{creature: Spider, colour: White},
-				NewHex(2, 0, -2):  Piece{creature: QueenBee, colour: White},
-				NewHex(2, 1, -3):  Piece{creature: Beetle, colour: Black},
-				NewHex(2, 2, -4):  Piece{creature: SoldierAnt, colour: White},
-				NewHex(1, 3, -4):  Piece{creature: Grasshopper, colour: Black},
-				NewHex(0, 4, -4):  Piece{creature: Grasshopper, colour: White},
-				NewHex(-1, 4, -3): Piece{creature: QueenBee, colour: Black},
-				NewHex(-1, 3, -2): Piece{creature: SoldierAnt, colour: Black},
-				NewHex(-1, 2, -1): Piece{creature: Beetle, colour: White},
+			positions: map[hexgrid.Hex]Piece{
+				hexgrid.New(0, 0, 0):   Piece{creature: Spider, colour: Black},
+				hexgrid.New(1, 0, -1):  Piece{creature: Spider, colour: White},
+				hexgrid.New(2, 0, -2):  Piece{creature: QueenBee, colour: White},
+				hexgrid.New(2, 1, -3):  Piece{creature: Beetle, colour: Black},
+				hexgrid.New(2, 2, -4):  Piece{creature: SoldierAnt, colour: White},
+				hexgrid.New(1, 3, -4):  Piece{creature: Grasshopper, colour: Black},
+				hexgrid.New(0, 4, -4):  Piece{creature: Grasshopper, colour: White},
+				hexgrid.New(-1, 4, -3): Piece{creature: QueenBee, colour: Black},
+				hexgrid.New(-1, 3, -2): Piece{creature: SoldierAnt, colour: Black},
+				hexgrid.New(-1, 2, -1): Piece{creature: Beetle, colour: White},
 			},
 		},
-		moves: map[int]map[Hex][]Hex{
-			Black: map[Hex][]Hex{
-				NewHex(0, 0, 0): []Hex{NewHex(3, -1, -2), NewHex(-2, 2, 0), NewHex(0, 3, -3), NewHex(1, 2, -3)},
+		moves: map[int]map[hexgrid.Hex][]hexgrid.Hex{
+			Black: map[hexgrid.Hex][]hexgrid.Hex{
+				hexgrid.New(0, 0, 0): []hexgrid.Hex{hexgrid.New(3, -1, -2), hexgrid.New(-2, 2, 0), hexgrid.New(0, 3, -3), hexgrid.New(1, 2, -3)},
 			},
-			White: map[Hex][]Hex{
-				NewHex(-1, 2, -1): []Hex{NewHex(-2, 3, -1), NewHex(-1, 3, -2), NewHex(0, 2, -2)},
+			White: map[hexgrid.Hex][]hexgrid.Hex{
+				hexgrid.New(-1, 2, -1): []hexgrid.Hex{hexgrid.New(-2, 3, -1), hexgrid.New(-1, 3, -2), hexgrid.New(0, 2, -2)},
 			},
 		},
 	},
@@ -201,25 +204,25 @@ var sampleGames map[string]testCaseGame = map[string]testCaseGame{
 	//       \__/
 	"Game 6": {
 		game: Game{
-			positions: map[Hex]Piece{
-				NewHex(0, 0, 0):   Piece{creature: SoldierAnt, colour: Black},
-				NewHex(0, -1, 1):  Piece{creature: Beetle, colour: Black},
-				NewHex(0, -2, 2):  Piece{creature: QueenBee, colour: White},
-				NewHex(-1, 0, 1):  Piece{creature: Beetle, colour: White},
-				NewHex(-2, 0, 2):  Piece{creature: Grasshopper, colour: White},
-				NewHex(-2, -1, 3): Piece{creature: QueenBee, colour: Black},
+			positions: map[hexgrid.Hex]Piece{
+				hexgrid.New(0, 0, 0):   Piece{creature: SoldierAnt, colour: Black},
+				hexgrid.New(0, -1, 1):  Piece{creature: Beetle, colour: Black},
+				hexgrid.New(0, -2, 2):  Piece{creature: QueenBee, colour: White},
+				hexgrid.New(-1, 0, 1):  Piece{creature: Beetle, colour: White},
+				hexgrid.New(-2, 0, 2):  Piece{creature: Grasshopper, colour: White},
+				hexgrid.New(-2, -1, 3): Piece{creature: QueenBee, colour: Black},
 			},
 		},
-		moves: map[int]map[Hex][]Hex{
-			Black: map[Hex][]Hex{
-				NewHex(0, 0, 0): []Hex{
-					NewHex(-1, 1, 0), NewHex(-2, 1, 1), NewHex(-3, 1, 2), NewHex(-3, 0, 3), NewHex(-3, -1, 4), NewHex(-2, -2, 4),
-					NewHex(-1, -2, 3), NewHex(0, -3, 3), NewHex(1, -3, 2), NewHex(1, -2, 1), NewHex(1, -1, 0),
+		moves: map[int]map[hexgrid.Hex][]hexgrid.Hex{
+			Black: map[hexgrid.Hex][]hexgrid.Hex{
+				hexgrid.New(0, 0, 0): []hexgrid.Hex{
+					hexgrid.New(-1, 1, 0), hexgrid.New(-2, 1, 1), hexgrid.New(-3, 1, 2), hexgrid.New(-3, 0, 3), hexgrid.New(-3, -1, 4), hexgrid.New(-2, -2, 4),
+					hexgrid.New(-1, -2, 3), hexgrid.New(0, -3, 3), hexgrid.New(1, -3, 2), hexgrid.New(1, -2, 1), hexgrid.New(1, -1, 0),
 				},
-				NewHex(-2, -1, 3): []Hex{NewHex(-3, 0, 3), NewHex(-1, -1, 2)},
+				hexgrid.New(-2, -1, 3): []hexgrid.Hex{hexgrid.New(-3, 0, 3), hexgrid.New(-1, -1, 2)},
 			},
-			White: map[Hex][]Hex{
-				NewHex(0, -2, 2): []Hex{NewHex(-1, -1, 2), NewHex(1, -2, 1)},
+			White: map[hexgrid.Hex][]hexgrid.Hex{
+				hexgrid.New(0, -2, 2): []hexgrid.Hex{hexgrid.New(-1, -1, 2), hexgrid.New(1, -2, 1)},
 			},
 		},
 	},
@@ -233,12 +236,12 @@ var sampleGames map[string]testCaseGame = map[string]testCaseGame{
 	//          \__/
 	"Game 7": {
 		game: Game{
-			positions: map[Hex]Piece{
-				NewHex(0, 0, 0):  Piece{creature: SoldierAnt, colour: Black},
-				NewHex(-1, 0, 1): Piece{creature: QueenBee, colour: Black},
-				NewHex(-1, 1, 0): Piece{creature: SoldierAnt, colour: White},
-				NewHex(1, 0, -1): Piece{creature: Beetle, colour: Black},
-				NewHex(2, 0, -2): Piece{creature: QueenBee, colour: White},
+			positions: map[hexgrid.Hex]Piece{
+				hexgrid.New(0, 0, 0):  Piece{creature: SoldierAnt, colour: Black},
+				hexgrid.New(-1, 0, 1): Piece{creature: QueenBee, colour: Black},
+				hexgrid.New(-1, 1, 0): Piece{creature: SoldierAnt, colour: White},
+				hexgrid.New(1, 0, -1): Piece{creature: Beetle, colour: Black},
+				hexgrid.New(2, 0, -2): Piece{creature: QueenBee, colour: White},
 			},
 			// Incomplete move options
 		},
@@ -254,22 +257,22 @@ var sampleGames map[string]testCaseGame = map[string]testCaseGame{
 	//       \__/
 	"Game 8": {
 		game: Game{
-			positions: map[Hex]Piece{
+			positions: map[hexgrid.Hex]Piece{
 
-				NewHex(0, 0, 0):   Piece{creature: QueenBee, colour: Black},
-				NewHex(-1, 1, 0):  Piece{creature: Grasshopper, colour: Black},
-				NewHex(1, -1, 0):  Piece{creature: SoldierAnt, colour: Black},
-				NewHex(2, -1, -1): Piece{creature: Spider, colour: White},
-				NewHex(2, 0, -2):  Piece{creature: Beetle, colour: White},
-				NewHex(1, 1, -2):  Piece{creature: Beetle, colour: Black},
+				hexgrid.New(0, 0, 0):   Piece{creature: QueenBee, colour: Black},
+				hexgrid.New(-1, 1, 0):  Piece{creature: Grasshopper, colour: Black},
+				hexgrid.New(1, -1, 0):  Piece{creature: SoldierAnt, colour: Black},
+				hexgrid.New(2, -1, -1): Piece{creature: Spider, colour: White},
+				hexgrid.New(2, 0, -2):  Piece{creature: Beetle, colour: White},
+				hexgrid.New(1, 1, -2):  Piece{creature: Beetle, colour: Black},
 			},
 		},
-		moves: map[int]map[Hex][]Hex{
-			Black: map[Hex][]Hex{
-				NewHex(-1, 1, 0): []Hex{NewHex(2, -2, 0)},
-				NewHex(1, 1, -2): []Hex{NewHex(1, 0, -1), NewHex(2, 0, -2), NewHex(2, 1, -3)},
+		moves: map[int]map[hexgrid.Hex][]hexgrid.Hex{
+			Black: map[hexgrid.Hex][]hexgrid.Hex{
+				hexgrid.New(-1, 1, 0): []hexgrid.Hex{hexgrid.New(2, -2, 0)},
+				hexgrid.New(1, 1, -2): []hexgrid.Hex{hexgrid.New(1, 0, -1), hexgrid.New(2, 0, -2), hexgrid.New(2, 1, -3)},
 			},
-			White: map[Hex][]Hex{},
+			White: map[hexgrid.Hex][]hexgrid.Hex{},
 		},
 	},
 
@@ -282,13 +285,13 @@ var sampleGames map[string]testCaseGame = map[string]testCaseGame{
 	//  \__/  \__/
 	"Game 9": {
 		game: Game{
-			positions: map[Hex]Piece{
-				NewHex(0, 0, 0):  Piece{creature: Spider},
-				NewHex(-1, 1, 0): Piece{creature: Beetle},
-				NewHex(-1, 0, 1): Piece{creature: Beetle},
-				NewHex(0, -1, 1): Piece{creature: Beetle},
-				NewHex(1, -1, 0): Piece{creature: Beetle},
-				NewHex(1, 0, -1): Piece{creature: Beetle},
+			positions: map[hexgrid.Hex]Piece{
+				hexgrid.New(0, 0, 0):  Piece{creature: Spider},
+				hexgrid.New(-1, 1, 0): Piece{creature: Beetle},
+				hexgrid.New(-1, 0, 1): Piece{creature: Beetle},
+				hexgrid.New(0, -1, 1): Piece{creature: Beetle},
+				hexgrid.New(1, -1, 0): Piece{creature: Beetle},
+				hexgrid.New(1, 0, -1): Piece{creature: Beetle},
 			},
 		},
 		// Incomplete move options
@@ -310,22 +313,35 @@ func TestGetAvailableMoves(t *testing.T) {
 	}
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
-			got := GetAvailableMoves(NewHex(0, 0, 0), tc.game)
+			got := GetAvailableMoves(hexgrid.New(0, 0, 0), tc.game)
 			want := tc.zeroPosMoves()
-			if !HexSliceIsEqual(got, want) {
+			if !hexSlicesAreEqual(got, want) {
 				t.Errorf("Got %v, want %v", got, want)
 			}
 		})
 	}
 }
 
-func hexDictsAreEqual(a map[Hex][]Hex, b map[Hex][]Hex) bool {
+func hexSlicesAreEqual(a, b []hexgrid.Hex) bool {
+        am := make(map[hexgrid.Hex]struct{})
+        for _, v := range a {
+                am[v] = struct{}{}
+        }
+
+        bm := make(map[hexgrid.Hex]struct{})
+        for _, v := range b {
+                bm[v] = struct{}{}
+        }
+        return reflect.DeepEqual(am, bm)
+}
+
+func hexDictsAreEqual(a map[hexgrid.Hex][]hexgrid.Hex, b map[hexgrid.Hex][]hexgrid.Hex) bool {
 	if len(a) != len(b) {
 		return false
 	}
 	for k, av := range a {
 		if bv, ok := b[k]; ok {
-			if !HexSliceIsEqual(av, bv) {
+			if !hexSlicesAreEqual(av, bv) {
 				return false
 			}
 		} else {
@@ -369,7 +385,7 @@ func TestGetPlacements(t *testing.T) {
 			t.Run(name+colourNames[player], func(t *testing.T) {
 				got := GetPlacements(tc.game, player)
 				want := tc.placements[player]
-				if !HexSliceIsEqual(got, want) {
+				if !hexSlicesAreEqual(got, want) {
 					t.Errorf("Got %v, want %v", got, want)
 				}
 			})

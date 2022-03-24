@@ -3,6 +3,8 @@ package hive
 import (
 	"log"
 	"sync"
+
+	"github.com/maze-mapper/hive/hexgrid"
 )
 
 // Piece enums
@@ -29,12 +31,12 @@ type Piece struct {
 
 // Game holds information on the game state
 type Game struct {
-	positions map[Hex]Piece // Positions occupied by a piece
+	positions map[hexgrid.Hex]Piece // Positions occupied by a piece
 }
 
 // Copy returns a deep copy of a Game
 func (g *Game) Copy() Game {
-	positions := map[Hex]Piece{}
+	positions := map[hexgrid.Hex]Piece{}
 	for h, piece := range g.positions {
 		positions[h] = Piece{
 			creature: piece.creature,
@@ -46,7 +48,7 @@ func (g *Game) Copy() Game {
 }
 
 // checkSpaceOccupied returns true if a space is occupied by a piece
-func (g *Game) checkSpaceOccupied(h Hex) bool {
+func (g *Game) checkSpaceOccupied(h hexgrid.Hex) bool {
 	_, ok := g.positions[h]
 	return ok
 }
@@ -54,16 +56,16 @@ func (g *Game) checkSpaceOccupied(h Hex) bool {
 // ensureConnected checks if the graph is connected to enforce the one hive rule
 func (g *Game) ensureConnected() bool {
 	// Get an arbitrary starting node (consider an empty graph to be connected)
-	var start Hex
+	var start hexgrid.Hex
 	for k := range g.positions {
 		start = k
 		break
 	}
 
 	// Valid neighbours must have pieces
-	neigbourFunc := func(hh Hex) []Hex {
+	neigbourFunc := func(hh hexgrid.Hex) []hexgrid.Hex {
 		neighbours := hh.GetAdjacent()
-		validNeigbours := []Hex{}
+		validNeigbours := []hexgrid.Hex{}
 		for _, neighbour := range neighbours {
 			if _, ok := g.positions[neighbour]; ok {
 				validNeigbours = append(validNeigbours, neighbour)
@@ -85,18 +87,18 @@ func (g *Game) ensureConnected() bool {
 
 // BFS performs a Breadth First Search from a starting hex.
 // neighbourFunc should return valid neighbours for a given hex.
-func BFS(start Hex, g *Game, neighbourFunc func(Hex) []Hex, maxDepth int) [][]Hex {
-	visited := map[Hex]struct{}{
+func BFS(start hexgrid.Hex, g *Game, neighbourFunc func(hexgrid.Hex) []hexgrid.Hex, maxDepth int) [][]hexgrid.Hex {
+	visited := map[hexgrid.Hex]struct{}{
 		start: struct{}{},
 	}
 
-	nodesByDepth := [][]Hex{
-		[]Hex{start},
+	nodesByDepth := [][]hexgrid.Hex{
+		[]hexgrid.Hex{start},
 	}
 
 	for depth := 1; maxDepth == 0 || depth <= maxDepth; depth++ {
 		// Increase depth level for found hexes
-		nodesByDepth = append(nodesByDepth, []Hex{})
+		nodesByDepth = append(nodesByDepth, []hexgrid.Hex{})
 
 		for _, h := range nodesByDepth[depth-1] {
 			neighbours := neighbourFunc(h)
@@ -119,15 +121,15 @@ func BFS(start Hex, g *Game, neighbourFunc func(Hex) []Hex, maxDepth int) [][]He
 
 	// Pad return value if a specific depth was specified
 	for len(nodesByDepth) <= maxDepth {
-		nodesByDepth = append(nodesByDepth, []Hex{})
+		nodesByDepth = append(nodesByDepth, []hexgrid.Hex{})
 	}
 
 	return nodesByDepth
 }
 
 // GetAllAvailableMoves returns a map of hexes to all possible moves for a given player colour
-func GetAllAvailableMoves(g Game, colour int) map[Hex][]Hex {
-	moves := map[Hex][]Hex{}
+func GetAllAvailableMoves(g Game, colour int) map[hexgrid.Hex][]hexgrid.Hex {
+	moves := map[hexgrid.Hex][]hexgrid.Hex{}
 	var mu sync.Mutex
 	var wg sync.WaitGroup
 
@@ -152,13 +154,13 @@ func GetAllAvailableMoves(g Game, colour int) map[Hex][]Hex {
 }
 
 // GetAvailableMoves returns the available moves for a piece
-func GetAvailableMoves(h Hex, g Game) []Hex {
+func GetAvailableMoves(h hexgrid.Hex, g Game) []hexgrid.Hex {
 	piece, ok := g.positions[h]
 	if !ok {
 		log.Fatalf("No piece at coordinate %v", h)
 	}
 
-	var moves []Hex
+	var moves []hexgrid.Hex
 
 	// Remove piece from starting location to avoid invalid moves after the first
 	p := g.positions[h]
@@ -200,7 +202,7 @@ func GetAvailableMoves(h Hex, g Game) []Hex {
 }
 
 // getAvailableAdjacentMoves returns the available adjacent tiles one away
-func getAvailableAdjacentMoves(h Hex, g Game, allowClimbing bool) []Hex {
+func getAvailableAdjacentMoves(h hexgrid.Hex, g Game, allowClimbing bool) []hexgrid.Hex {
 	adjacent := h.GetAdjacent()
 	l := len(adjacent)
 
@@ -246,7 +248,7 @@ func getAvailableAdjacentMoves(h Hex, g Game, allowClimbing bool) []Hex {
 		}
 	}
 
-	moves := []Hex{}
+	moves := []hexgrid.Hex{}
 	for i, b := range allowed {
 		if b {
 			moves = append(moves, adjacent[i])
@@ -256,11 +258,11 @@ func getAvailableAdjacentMoves(h Hex, g Game, allowClimbing bool) []Hex {
 }
 
 // getAvailableJumpMoves returns the tiles reachable by jumping over other pieces
-func getAvailableJumpMoves(h Hex, g Game) []Hex {
+func getAvailableJumpMoves(h hexgrid.Hex, g Game) []hexgrid.Hex {
 	adjacent := h.GetAdjacent()
 
-	moves := []Hex{}
-	for direction := 0; direction < MaxDirections; direction++ {
+	moves := []hexgrid.Hex{}
+	for direction := 0; direction < hexgrid.MaxDirections; direction++ {
 		adjHex := adjacent[direction]
 		if g.checkSpaceOccupied(adjHex) {
 			// Move in direction until an empty space is found
@@ -276,8 +278,8 @@ func getAvailableJumpMoves(h Hex, g Game) []Hex {
 }
 
 // getAvailableBFSMovesAtDepth returns the available moves the given number of steps away using a BFS
-func getAvailableBFSMovesAtDepth(h Hex, g Game, steps int) []Hex {
-	neigbourFunc := func(hh Hex) []Hex {
+func getAvailableBFSMovesAtDepth(h hexgrid.Hex, g Game, steps int) []hexgrid.Hex {
+	neigbourFunc := func(hh hexgrid.Hex) []hexgrid.Hex {
 		return getAvailableAdjacentMoves(hh, g, false)
 	}
 	nodesByDepth := BFS(h, &g, neigbourFunc, steps)
@@ -285,13 +287,13 @@ func getAvailableBFSMovesAtDepth(h Hex, g Game, steps int) []Hex {
 }
 
 // getAllAvailableBFSMoves returns all available moves using a BFS
-func getAllAvailableBFSMoves(h Hex, g Game) []Hex {
-	neigbourFunc := func(hh Hex) []Hex {
+func getAllAvailableBFSMoves(h hexgrid.Hex, g Game) []hexgrid.Hex {
+	neigbourFunc := func(hh hexgrid.Hex) []hexgrid.Hex {
 		return getAvailableAdjacentMoves(hh, g, false)
 	}
 
 	nodesByDepth := BFS(h, &g, neigbourFunc, 0)
-	moves := []Hex{}
+	moves := []hexgrid.Hex{}
 	for i := 1; i < len(nodesByDepth); i++ {
 		moves = append(moves, nodesByDepth[i]...)
 	}
@@ -299,8 +301,8 @@ func getAllAvailableBFSMoves(h Hex, g Game) []Hex {
 }
 
 // GetPlacements returns all hexes where a particular colour piece could be placed
-func GetPlacements(g Game, colour int) []Hex {
-	allPlacements := map[Hex]map[int]struct{}{}
+func GetPlacements(g Game, colour int) []hexgrid.Hex {
+	allPlacements := map[hexgrid.Hex]map[int]struct{}{}
 	for h, piece := range g.positions {
 		neighbours := h.GetAdjacent()
 		for _, neighbour := range neighbours {
@@ -317,7 +319,7 @@ func GetPlacements(g Game, colour int) []Hex {
 		}
 	}
 
-	placements := []Hex{}
+	placements := []hexgrid.Hex{}
 	for k, v := range allPlacements {
 		// Add to placements if the only touching colour is the player colour
 		if _, ok := v[colour]; len(v) == 1 && ok {

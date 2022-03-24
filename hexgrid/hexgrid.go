@@ -1,4 +1,4 @@
-package hive
+package hexgrid
 
 // Hex represents a coordinate on a hexagonal grid
 // +s ____
@@ -11,8 +11,8 @@ type Hex struct {
 	q, r, s int
 }
 
-// NewHex returns a new Hex
-func NewHex(q, r, s int) Hex {
+// New returns a new Hex
+func New(q, r, s int) Hex {
 	if q+r+s != 0 {
 		panic("Invalid hexgrid coordinates")
 	}
